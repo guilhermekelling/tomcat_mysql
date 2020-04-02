@@ -1,0 +1,45 @@
+version: '3'
+volumes:
+  data:
+networks:
+  banco:
+  web:
+services:
+  db:
+    image: mysql:8.0.19
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: example_db
+      MYSQL_USER: adm_guilherme
+      MYSQL_PASSWORD: RqQ!yu#G*p
+    ports:
+      - "3306:3306"
+    expose: 
+      # Opens port 3306 on the container
+      - "3306"
+    networks:
+      - banco
+    volumes:
+      - data:/var/lib/mysql
+      - ./db/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+  web:
+    image: tomcat:8.5.53-jdk8
+    # Environment variables do not appear to be getting loaded the first time Tomcat starts!
+    environment:
+      JDBC_URL: jdbc:mysql://db:3306/example_db?connectTimeout=0&amp;socketTimeout=0&amp;autoReconnect=true
+      JDBC_USER: adm_guilherme
+      JDBC_PASS: RqQ!yu#G*p
+    ports:
+      - "8080:8080"
+    expose: 
+    # Opens port 8080 on the container
+      - "8080"
+    volumes:
+     # - .tomcat/logs/:/usr/local/tomcat/logs/
+      - ./tomcat/webapps:/usr/local/tomcat/webapps
+      - ./tomcat/conf/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
+    networks:
+      - banco     
+      - web 
+    depends_on:
+      - db
